@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Kanit">
+	<link rel = "stylesheet" href="{{ url_for('ui', path = '/index.css')}}">
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="/ui/js/plot.js"></script>
+	<title>Solve Generators</title>
+</head>
+<body>
+
+	{%block content%}
+	<div class="bar">
+		<h1>Расчёт токов КЗ синхронного генератора</h1>
+	</div>
+	<div class="param">
+		<h2>Выберите модель генератора</h2>
+		{%if models%}
+			{%for i in models%}
+				<input type="button" value="{{i}}" id="{{i}}" onclick="button_heandler(this.id)">
+			{%endfor%} 
+		{%endif%}
+		
+		<script>
+			window.DATA = []
+			var ws = new WebSocket("ws://" + window.location.host);
+			
+			ws.onopen = function () {
+
+				ws.send(JSON.stringify({
+					'connection':'open'
+				}));
+
+			}
+
+			ws.onmessage = function(event) {
+				Data = JSON.parse(event.data)
+				NewChart(Data);
+			}
+
+			ws.onclose = function() {
+			}
+			function button_heandler(id) {
+
+				const model = id;
+
+				var zatemnenie = document.createElement('div');
+				zatemnenie.id = 'zatemnenie';
+				document.body.append(zatemnenie);
+				
+				var okno = document.createElement('div');
+				okno.id = 'okno';
+				zatemnenie.append(okno);
+				
+				const forms_list = [
+					"InductiveResistance",
+					"BasePower",
+					"BaseVoltage"
+				]
+
+				const forms_list_names = [
+					"Внешнее сопротивление Хэ (o.e)",
+					"Базисная мощность ступени КЗ (o.e)",
+					"Базисное напряжение ступени КЗ (o.e)"
+				]
+
+				var form = document.createElement('form');
+				form.id = 'network_data';
+				form.name = 'network_data';
+
+				let text = document.createElement('h2');
+				text.textContent = model;
+				form.append(text);
+
+				for (let i=0; i < forms_list.length; i++) {
+					
+					let text = document.createElement('p');
+					text.textContent = forms_list_names[i];
+					form.append(text);
+
+					let new_form = document.createElement('input');
+					new_form.id = '_forms';
+					new_form.name = forms_list[i];
+					new_form.title = forms_list[i];
+					new_form.value = 0.0;
+					form.append(new_form);
+				}
+
+				let btt = document.createElement('input');
+				btt.type = 'button';
+				btt.onclick = send_model
+				btt.value = 'Подтвердить';
+				
+				form.append(btt);
+				okno.append(form);
+
+				function send_model(event) {
+					const _FORM = document.getElementById('network_data');
+					const InductResistance = document.getElementsByName('InductiveResistance');
+					const BasePower = document.getElementsByName('BasePower');
+					const BaseVoltage = document.getElementsByName('BaseVoltage');
+					console.log(_FORM);
+
+					ws.send(JSON.stringify({
+						'model':model,
+						'InductResistance':_FORM[0].value,
+						'BasePower':_FORM[1].value,
+						'BaseVoltage':_FORM[2].value
+					}));
+
+					zatemnenie.remove();
+					_FORM.remove();
+					okno.remove();
+					
+				}
+
+			}
+		
+		</script>
+	</div>
+	
+	<div class="Chart">
+		<canvas id="myChart"></canvas>
+	</div>
+
+	{%endblock%}
+	
+</body>
+</html>

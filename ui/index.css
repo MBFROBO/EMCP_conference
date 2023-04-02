@@ -1,0 +1,173 @@
+h1 {
+    font-style: Kanit;
+    font-size: large;
+    color: rgb(0, 0, 0);
+}
+
+h2 {
+    position: relative;
+    display: block;
+    width: 70%;
+    margin-left: auto;
+    margin-right: auto;
+    top: 5%;
+    font-style: Kanit;
+    font-size: medium;
+    color: rgb(0, 0, 0);
+}
+
+body {
+    position: absolute;
+    display: block;
+    margin: 0px;
+    height: 100%;
+    width: 100%;
+    background-color: #ffffff;
+}
+
+.param {
+    position: absolute;
+    border-radius: 5px;
+    background-color: rgb(255, 255, 255);
+    border-color: #494747;
+    width: 25%;
+    height: 60%;
+    left: 10%;
+    top: 25%;
+    box-shadow: #06fff3 5px 3px 3px;
+
+}
+
+input[type = button] {
+    position: relative;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    top: 30px;
+    height: 9%;
+    width: 85%;
+	border: none;
+	background: rgb(13, 247, 208);
+	color: #494747;
+	padding: 10px;
+	font-size: 22px;
+	border-radius: 5px;
+	position: relative;
+	box-sizing: border-box;
+	transition: all 500ms ease; 
+}
+
+input[type = button]::after {
+    content:'';
+	position: relative;
+	top: 0;
+	left: 0;
+	width: 0px;
+	height: 50px;
+	background: rgba(20, 20, 20, 0.3);
+	border-radius: 5px;
+	transition: all 2s ease;
+}
+
+input[type = button]:hover {
+    background: rgba(0, 236, 217, 0.795);
+	border-radius: 5px;
+	transition: all 0.3s ease;
+}
+
+input[type = button]:active {
+    background: rgba(0, 236, 216, 0);
+}
+
+
+#zatemnenie {
+    background: rgba(102, 102, 102, 0.89);
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+  }
+
+  #okno {
+    width: 40%;
+    height: 50%;
+    text-align: center;
+    padding: 15px;
+    border: 3px solid #22cbff;
+    border-radius: 10px;
+    color: #59e6ff;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    margin: auto;
+    background: #00000057;
+  }
+
+
+button[type = submit] {
+    position: relative;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    top: 30px;
+    height: 9%;
+    width: 85%;
+	border: none;
+	background: #1cffa0;
+	color: #494747;
+	padding: 10px;
+	font-size: 22px;
+	border-radius: 5px;
+	position: relative;
+	box-sizing: border-box;
+	transition: all 500ms ease; 
+}
+
+button[type = submit]::after {
+    content:'';
+	position: relative;
+	top: 0;
+	left: 0;
+	width: 0px;
+	height: 50px;
+	background: rgba(20, 20, 20, 0.3);
+	border-radius: 5px;
+	transition: all 2s ease;
+}
+
+button[type = submit]:hover {
+    background: rgba(0, 236, 217, 0.795);
+	border-radius: 5px;
+	transition: all 0.3s ease;
+}
+
+button[type = submit]:active {
+    background: rgba(0, 236, 216, 0);
+}
+
+
+input[id = _forms] {
+    width:40%;
+    resize: vertical;
+    padding:15px;
+    border-radius:15px;
+    border:3px;
+    border-color:#494747;
+    box-shadow:4px 4px 10px rgba(34, 255, 237, 0.616);
+    height: 20px;
+
+}
+
+.Chart {
+    position:relative;
+    left: 45%;
+    top: 20%;
+
+    height: 50%;
+    width: 70%;
+
+}
