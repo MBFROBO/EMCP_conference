@@ -77,130 +77,139 @@ class Heandler:
 
 class Solver(Heandler):
 
-    def __init__(self, IndRes = 0, BasePower = 0, BaseVoltage = 0, DEBUG = False):
+    def __init__(self, DEBUG = False):
         super().__init__()
         
         
-    def main(self, IndRes = 0, BasePower = 0, BaseVoltage = 0, DEBUG = False):
+    def main(self, IndRes = 0, BasePower = 0, BaseVoltage = 0, kzTime = 0, DEBUG = False):
         
-        self.InductiveResistance    = IndRes            # Внешнее сопротивление сети (эквивалентное, о.е)
-        self.BasePower              = BasePower         # Базисная мощность сети ступени КЗ
-        self.BaseVoltage            = BaseVoltage       # Базисное напряжение сети ступени КЗ
-        self.DEBUG                  = DEBUG
+        try:
+
+            self.InductiveResistance    = IndRes            # Внешнее сопротивление сети (эквивалентное, о.е)
+            self.BasePower              = BasePower         # Базисная мощность сети ступени КЗ
+            self.BaseVoltage            = BaseVoltage       # Базисное напряжение сети ступени КЗ
+            self.kz_Time                = kzTime
+            self.DEBUG                  = DEBUG
 
 
-        Xout        = float(self.InductiveResistance)
-        BasePower   = float(self.BasePower)
-        BaseVoltage = float(self.BaseVoltage)
+            Xout        = float(self.InductiveResistance)
+            BasePower   = float(self.BasePower)
+            BaseVoltage = float(self.BaseVoltage)
+            kzTime      = int(str(self.kz_Time).split('0.')[1])
+            print(kzTime)
+            S_BASE = BasePower * 10**6                      # Базисная мощность
+            U_BASE = BaseVoltage * 10**3                    # Базисное напряжение
+            I_BASE = S_BASE/(np.sqrt(3)*U_BASE)             # Базисный ток
 
-        S_BASE = 500 * 10**6                            # Базисная мощность
-        U_BASE = 20 * 10**3                             # Базисное напряжение
-        I_BASE = S_BASE/(np.sqrt(3)*U_BASE)             # Базисный ток
-
-        I_0 = (0.7*self.NomFullPower*10**6)/(np.sqrt(3)*self.NomStatorVoltage*10**3) #Ток режима работы
-        sinfi = np.sqrt(1- self.cosfi**2)
-        
-        R = self.NomStatorVoltage*10**3/I_0  # Активное сопротивелние Ом
-
-        U0b = self.NomStatorVoltage*10**3 / U_BASE
-        I0b = I_0/I_BASE
-
-        Q0   = np.sqrt((0.7*self.NomFullPower**2 - 0.7*self.NomActPower**2)*10**12)    # Реактивная мощность
-        Qnom = np.sqrt((self.NomFullPower**2 - self.NomActPower**2)*10**12)
-
-        Xd  = self.xd  * (U_BASE**2/(self.NomFullPower*10**6))
-        Xq  = self.xq  * (U_BASE**2/(self.NomFullPower*10**6))
-        X2d = self.x2d * (U_BASE**2/(self.NomFullPower*10**6))
-        X1d = self.x1d * (U_BASE**2/(self.NomFullPower*10**6))
-
-        E11d = np.sqrt((U0b*self.cosfi)**2 + (U0b*sinfi + I0b*X2d)**2)
-
-        T_sigma = self.x_sigma/(2*3.14*50*self.Ra)
-
-        Eq = (U_BASE**4 + Qnom*U_BASE**2*(Xd + Xq) + (self.NomActPower**2*10**12 + Qnom**2)*Xd*Xq)/(U_BASE*np.sqrt(U_BASE**4 + 2*Qnom*10**6*U_BASE**2*Xq + (self.NomActPower**2*10**12 + Qnom**2)*Xq**2))
-        E11q = np.sqrt((U_BASE + (self.NomStatorCurrent*10**3)*X2d*sinfi)**2 + ((self.NomStatorCurrent*10**3)*X2d*self.cosfi)**2)
-        E1q = np.sqrt((U_BASE + (self.NomStatorCurrent*10**3)*X1d*sinfi)**2 + ((self.NomStatorCurrent*10**3)*X1d*self.cosfi)**2)
-        
-
-        Eq0   = Eq/U_BASE
-        E11q0 = E11q/U_BASE
-        E1q0  = E1q/U_BASE
-
-        t = [float(i) for i in np.arange(0.00,0.5, 0.001)] # Интервал и шаг времени
-
-        def Ldpt(t = t,Eq0 = Eq0, Xd =Xd, Xout = Xout, 
-                    E1q0 = E1q0, X1d = X1d, T1d0 = self.T1d0, 
-                    T11d0 = self.T2d0, E11q0=E11q0, X11d = X2d, Tsigma = T_sigma):
+            I_0 = (0.7*self.NomFullPower*10**6)/(np.sqrt(3)*self.NomStatorVoltage*10**3) #Ток режима работы
+            sinfi = np.sqrt(1- self.cosfi**2)
             
-            Eqp = 3  # Предельное значение ЭДС
-            idpt = []
+            R = self.NomStatorVoltage*10**3/I_0  # Активное сопротивелние Ом
 
-            for t in t:
-                idpt_1 = (Eq0/(Xd + Xout) + (E1q0/(X1d + Xout) - Eq0/(Xout+Xd))*np.exp(-t/T1d0))
-                idpt_2 = (E11q0/(X11d + Xout) - E1q0/(Xout+X1d))*np.exp(-t/T11d0)
-                idpt_3 = (Eqp - Eq0/(Xd+Xout))*(((1-(T1d0-Tsigma)/(T1d0 - T11d0))*np.exp(-t/T1d0))  + ((T11d0 - Tsigma)/(T1d0-T11d0))*np.exp(-t/T11d0))
-                SUM = idpt_1 + idpt_2 + idpt_3
-                idpt.append(SUM)
+            U0b = self.NomStatorVoltage*10**3 / U_BASE
+            I0b = 1
 
-            return idpt
+            Q0   = np.sqrt((0.7*self.NomFullPower**2 - 0.7*self.NomActPower**2)*10**12)    # Реактивная мощность
+            Qnom = np.sqrt((self.NomFullPower**2 - self.NomActPower**2)*10**12)
 
-        IDPT = Ldpt()
+            Xd  = self.xd  * (U_BASE**2/(self.NomFullPower*10**6))
+            Xq  = self.xq  * (U_BASE**2/(self.NomFullPower*10**6))
+            X2d = self.x2d * (U_BASE**2/(self.NomFullPower*10**6))
+            X1d = self.x1d * (U_BASE**2/(self.NomFullPower*10**6))
 
-        def Iqpt(t=t, E11d = E11d, X11q = self.x2q, Xout = Xout, T11q0 = self.T2q0):
-            iqpt = []
-            for t in t:
-                iqpt_1 = (E11d/(X11q + Xout)*np.exp(-t/T11q0))
-                iqpt.append(iqpt_1)
+            E11d = np.sqrt((U0b*self.cosfi)**2 + (U0b*sinfi + I0b*X2d)**2)
+
+            T_sigma = self.x_sigma/(2*3.14*50*self.Ra)
+
+
+            Eq = (U_BASE**4 + Qnom*U_BASE**2*(Xd + Xq) + (self.NomActPower**2*10**12 + Qnom**2)*Xd*Xq)/(U_BASE*np.sqrt(U_BASE**4 + 2*Qnom*U_BASE**2*Xq + (self.NomActPower**2*10**12 + Qnom**2)*Xq**2))
+            E11q0 = np.sqrt((U0b + (I0b)*X2d*sinfi)**2 + ((I0b)*X2d*self.cosfi)**2)
+            E1q0 = np.sqrt((U0b + (I0b)*X1d*sinfi)**2 + ((I0b)*X1d*self.cosfi)**2)
             
-            return iqpt
 
-        IQPT = Iqpt()
+            Eq0   = Eq/U_BASE
+            # E11q0 = E11q/U_BASE
+            # E1q0  = E1q/U_BASE
 
-        def Ipt(IQPT = IQPT, IDPT= IDPT):
-            IPT = []
-            for i,j in zip(IDPT, IQPT):
-                IPT.append(np.sqrt(i**2 + j**2))
-            return IPT
-        
-        IPT = Ipt()
+            t = [float(i) for i in np.arange(0.00,0.51, 0.01)] # Интервал и шаг времени
 
-        def Gamma(Ipt = IPT, Ub = U_BASE, Sb = S_BASE):
-            GAMMA = []
-            for i in Ipt:
-                gamma = ((i/2) * (Ub**2/Sb))
-                GAMMA.append(gamma)
+            def Ldpt(t = t,Eq0 = Eq0, Xd =Xd, Xout = Xout, 
+                        E1q0 = E1q0, X1d = X1d, T1d0 = self.T1d0, 
+                        T11d0 = self.T2d0, E11q0=E11q0, X11d = X2d, Tsigma = T_sigma):
                 
-            return GAMMA
-        
-        _gamma = Gamma()
+                Eqp = 3  # Предельное значение ЭДС
+                idpt = []
 
+                for t in t:
+                    idpt_1 = (Eq0/(Xd + Xout) + (E1q0/(X1d + Xout) - Eq0/(Xout+Xd))*np.exp(-t/T1d0))
+                    idpt_2 = (E11q0/(X11d + Xout) - E1q0/(Xout+X1d))*np.exp(-t/T11d0)
+                    idpt_3 = (Eqp - Eq0/(Xd+Xout))*(((1-(T1d0-Tsigma)/(T1d0 - T11d0))*np.exp(-t/T1d0))  + ((T11d0 - Tsigma)/(T1d0-T11d0))*np.exp(-t/T11d0))
+                    SUM = idpt_1 + idpt_2 + idpt_3
+                    idpt.append(SUM)
 
-        if self.DEBUG == True:
-            variable_dict = {
+                return idpt
 
-                'I 0': I_0,     # ok
-                'sinfi':sinfi,  # ok
-                'R':R,          # ok
-                'U0b':U0b,      # ok
-                'I0b':I0b,      # ok
-                'Q0':Q0,        # ~
-                'Qnom':Qnom,    # ok
-                'Xd':Xd,        # ok
-                'Xq':Xq,        # ok
-                'X2d':X2d,      # ok
-                'X1d':X1d,      # ok
-                "E''d":E11d,    # ok
-                "E'q":E1q,      # ok
-                "E''q":E11q,    # ok
-                "Eq":Eq,        # -
-                "Tsigma":T_sigma, # ok
-                "_gamma":len(_gamma)
-            }
+            IDPT = Ldpt()
 
-            for i,j in zip(variable_dict.keys(),variable_dict.values()):
-                print(i,':',j)
-                print('----------------')
+            def Iqpt(t=t, E11d = E11d, X11q = self.x2q, Xout = Xout, T11q0 = self.T2q0):
+                iqpt = []
+                for t in t:
+                    iqpt_1 = (E11d/(X11q + Xout)*np.exp(-t/T11q0))
+                    iqpt.append(iqpt_1)
+                
+                return iqpt
 
-        return _gamma
-    
+            IQPT = Iqpt()
+
+            def Ipt(IQPT = IQPT, IDPT= IDPT):
+                IPT = []
+                for i,j in zip(IDPT, IQPT):
+                    IPT.append(np.sqrt(i**2 + j**2))
+                return IPT
+            
+            IPT = Ipt()
+
+            def Gamma(Ipt = IPT, Ub = U_BASE, Sb = S_BASE):
+                GAMMA = []
+                for i in Ipt:
+                    gamma = ((i/Ipt[0]))
+                    GAMMA.append(gamma)
+                    
+                return GAMMA
+            
+            _gamma = Gamma()
+            I_kz = _gamma[kzTime]
+
+            if self.DEBUG == True:
+                variable_dict = {
+
+                    'I 0': I_0,     # ok
+                    'sinfi':sinfi,  # ok
+                    'R':R,          # ok
+                    'U0b':U0b,      # ok
+                    'I0b':I0b,      # ok
+                    'Q0':Q0,        # ~
+                    'Qnom':Qnom,    # ok
+                    'Xd':Xd,        # ok
+                    'Xq':Xq,        # ok
+                    'X2d':X2d,      # ok
+                    'X1d':X1d,      # ok
+                    "E''d":E11d,    # ok
+                    "E'q0":E1q0,      # ok
+                    "E''q0":E11q0,    # ok
+                    "Eq":Eq,        # ok
+                    "Tsigma":T_sigma, # ok
+                    "_gamma":_gamma
+                    
+                }
+
+                for i,j in zip(variable_dict.keys(),variable_dict.values()):
+                    print(i,':',j)
+                    print('----------------')
+
+            return [_gamma,'',I_kz]
+        except ZeroDivisionError:
+            return [0,'Ошибка деления на 0. Заполните все поля формы.']
+        except IndexError:
+            return [0, 'Ошибка в формате поля расчётного времени кз. Введите в формате 0.00']
 

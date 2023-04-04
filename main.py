@@ -51,7 +51,7 @@ class ConnectionManager:
         self.active_connections.remove(websocket)
 
     async def send_personal_message(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
+        await websocket.send_json(message)
 
     async def broadcast(self, message: str):
         for connection in self.active_connections:
@@ -78,18 +78,30 @@ async def read_root(websocket:WebSocket):
                 RESISTANCE   =    data['InductResistance']
                 BASE_POWER   =    data['BasePower']
                 BASE_VOLTAGE =    data['BaseVoltage']
-
+                KZ_TIME      =    data['KZ_time']
                 
                 SOLVER.Variable_determinate()
-                DATA = SOLVER.main(IndRes= RESISTANCE,
-                                BasePower= BASE_POWER,
-                                BaseVoltage= BASE_VOLTAGE,
-                                DEBUG= True)
-                print(DATA)
+                DATA = SOLVER.main(IndRes   = RESISTANCE,
+                                BasePower   = BASE_POWER,
+                                BaseVoltage = BASE_VOLTAGE,
+                                kzTime      = KZ_TIME,
+                                DEBUG       = True)
                 
-                await manager.send_personal_message(f'{DATA}', websocket)
+                if DATA[0] == 0:
+                    ERRORS = DATA[1]
+                else:
+                    ERRORS = 'None'
+                
+                await manager.send_personal_message({'DATA': f'{DATA[0]}',
+                                                     'ERRORS':f'{ERRORS}',
+                                                     'I_kz':f'{DATA[2]}'}, websocket)
     except WebSocketDisconnect:
         manager.disconnect(websocket)
+        
+    except KeyError:
+        pass
+    except IndexError:
+        pass
 
 
 

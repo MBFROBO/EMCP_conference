@@ -3,10 +3,11 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Kanit">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald&display=swap" rel="stylesheet">
 	<link rel = "stylesheet" href="{{ url_for('ui', path = '/index.css')}}">
 	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-	<script src="/ui/js/plot.js"></script>
 	<title>Solve Generators</title>
 </head>
 <body>
@@ -36,8 +37,36 @@
 			}
 
 			ws.onmessage = function(event) {
-				Data = JSON.parse(event.data)
-				NewChart(Data);
+
+				Data = JSON.parse(event.data);
+
+				if (String(Data['ERRORS']) != 'None') {
+					let Error_Form = document.createElement('h3');
+					Error_Form.id = 'Error_form';
+					Error_Form.innerHTML = String(Data['ERRORS']);
+					okno.append(Error_Form);
+				} else {
+					try {
+						zatemnenie.remove();
+						okno.remove();
+						_FORM.remove();
+					} catch (error) {
+						console.log(error);
+					}
+					removeData();
+					addData(JSON.parse(Data['DATA']));
+					I_KZ = JSON.parse(Data['I_kz']);
+
+					let _IKZ = document.createElement('div');
+					_IKZ.id = '_IKZ';
+					let text_IKZ = document.createElement('h3');
+					text_IKZ.id = 'text_kz';
+					text_IKZ.innerHTML = 'Ток короткого замыкания в выбранный момент времени: ' + I_KZ.toFixed(4), 'A';
+					_IKZ.append(text_IKZ);
+					document.body.append(_IKZ);
+
+				}
+				
 			}
 
 			ws.onclose = function() {
@@ -57,22 +86,24 @@
 				const forms_list = [
 					"InductiveResistance",
 					"BasePower",
-					"BaseVoltage"
+					"BaseVoltage",
+					"KZ_time"
 				]
 
 				const forms_list_names = [
 					"Внешнее сопротивление Хэ (o.e)",
-					"Базисная мощность ступени КЗ (o.e)",
-					"Базисное напряжение ступени КЗ (o.e)"
+					"Базисная мощность генератора, МВА",
+					"Базисное напряжение генератора, кВ",
+					"Расчётный момент времени КЗ, сек 0..0.49"
 				]
 
 				var form = document.createElement('form');
 				form.id = 'network_data';
 				form.name = 'network_data';
 
-				let text = document.createElement('h2');
-				text.textContent = model;
-				form.append(text);
+				// let text = document.createElement('h2');
+				// text.textContent = model;
+				// form.append(text);
 
 				for (let i=0; i < forms_list.length; i++) {
 					
@@ -84,7 +115,7 @@
 					new_form.id = '_forms';
 					new_form.name = forms_list[i];
 					new_form.title = forms_list[i];
-					new_form.value = 0.0;
+					new_form.value = '0.00';
 					form.append(new_form);
 				}
 
@@ -97,23 +128,19 @@
 				okno.append(form);
 
 				function send_model(event) {
-					const _FORM = document.getElementById('network_data');
-					const InductResistance = document.getElementsByName('InductiveResistance');
-					const BasePower = document.getElementsByName('BasePower');
-					const BaseVoltage = document.getElementsByName('BaseVoltage');
-					console.log(_FORM);
+					const _FORM 			= document.getElementById('network_data');
+					const InductResistance  = document.getElementsByName('InductiveResistance');
+					const BasePower 		= document.getElementsByName('BasePower');
+					const BaseVoltage 		= document.getElementsByName('BaseVoltage');
 
 					ws.send(JSON.stringify({
 						'model':model,
 						'InductResistance':_FORM[0].value,
 						'BasePower':_FORM[1].value,
-						'BaseVoltage':_FORM[2].value
+						'BaseVoltage':_FORM[2].value,
+						'KZ_time':_FORM[3].value
 					}));
 
-					zatemnenie.remove();
-					_FORM.remove();
-					okno.remove();
-					
 				}
 
 			}
@@ -123,6 +150,7 @@
 	
 	<div class="Chart">
 		<canvas id="myChart"></canvas>
+		<script src="/ui/js/plot.js"></script>
 	</div>
 
 	{%endblock%}

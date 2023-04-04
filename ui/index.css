@@ -1,18 +1,24 @@
 h1 {
-    font-style: Kanit;
-    font-size: large;
+    position: relative;
+    font-family: 'Oswald';
+    font-size: 28px;
+    /* font-size: large; */
     color: rgb(0, 0, 0);
+    left: 5%;
+    width: 100%;
+    top:5px;
 }
 
 h2 {
     position: relative;
     display: block;
     width: 70%;
+    left: 14%;
     margin-left: auto;
     margin-right: auto;
-    top: 5%;
-    font-style: Kanit;
-    font-size: medium;
+    top: 2%;
+    font-family: 'Oswald';
+    font-size: 20px;
     color: rgb(0, 0, 0);
 }
 
@@ -23,12 +29,14 @@ body {
     height: 100%;
     width: 100%;
     background-color: #ffffff;
+    scrollbar-width: none;
+
 }
 
 .param {
     position: absolute;
     border-radius: 5px;
-    background-color: rgb(255, 255, 255);
+    background-color: rgb(238, 238, 238);
     border-color: #494747;
     width: 25%;
     height: 60%;
@@ -92,7 +100,7 @@ input[type = button]:active {
 
   #okno {
     width: 40%;
-    height: 50%;
+    height: 55%;
     text-align: center;
     padding: 15px;
     border: 3px solid #22cbff;
@@ -168,6 +176,29 @@ input[id = _forms] {
     top: 20%;
 
     height: 50%;
-    width: 70%;
+    width: 50%;
 
+}
+
+.bar {
+    position: absolute;
+    top:0px;
+    height: 50px;
+    width: 35%;
+}
+
+
+h3[id = Error_form] {
+    position: relative;
+    top: 15px;
+    color: #ff3a3a;
+    font-family: 'Oswald';
+}
+
+div[id = _IKZ] {
+    position: relative;
+    top:20%;
+    left: 40%;
+    font-family: 'Oswald';
+    color:#ff3a3a;
 }
