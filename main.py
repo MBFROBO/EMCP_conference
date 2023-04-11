@@ -94,7 +94,7 @@ async def read_root(websocket:WebSocket):
                 
                 await manager.send_personal_message({'DATA': f'{DATA[0]}',
                                                      'ERRORS':f'{ERRORS}',
-                                                     'I_kz':f'{DATA[2]}'}, websocket)
+                                                     'I_kz':f'{DATA[2]}',}, websocket)
     except WebSocketDisconnect:
         manager.disconnect(websocket)
         
