@@ -1,32 +1,28 @@
+const ctx_1 = document.getElementById('myChart_1');
 
-const ctx = document.getElementById('myChart');
+const TIME_data_2 = [];
 
-var DISPLAY = true;
-var BORDER = true;
-var CHART_AREA = true;
-var TICKS = true;
-
-const TIME_data = [];
-for (let i=0;i<0.51;i=i+0.01) {
-    TIME_data.push(i.toFixed(4));
+for (let i=0;i<0.51;i= i+0.001) {
+    TIME_data_2.push(i.toFixed(4));
 }
 
-window.myChart = new Chart(ctx, {
+window.myChart_1 = new Chart(ctx_1, {
     type: 'line',
     data: {
-    labels: TIME_data,
+    labels: TIME_data_2,
     datasets: [{
-        label: '# Gamma',
+        label: '# Iкз',
         data: [],
         borderWidth: 1,
-            
+        borderColor: '#FF4500',       
+        backgroundColor: "#FF4500"
     }]
     },
     options: {  responsive: true,
     plugins: {
         title: {
         display: true,
-        text: 'Типовая кривая тока КЗ',
+        text: 'Ток КЗ'
         }
     },
     scales: {
@@ -53,36 +49,26 @@ window.myChart = new Chart(ctx, {
     );
 
 
-function removeData() {
-    window.myChart.destroy();
-    window.myChart_1.destroy();
-    }
+function addData_1(data) {
 
-function addData(data) {
-
-    const _data = [];
-
-    for (let i = 0; i < data.length; i = i + (data.length)/51) {
-        _data.push(data[i]);
-        
-    }
-    console.log('Длина _data: %d', _data);
-    window.myChart = new Chart(ctx, {
+    window.myChart_1 = new Chart(ctx_1, {
         type: 'line',
         data: {
-        labels: TIME_data,
+        labels: TIME_data_2,
         datasets: [{
-            label: '# Gamma',
-            data: _data,
-            borderWidth: 1,   
-            
-        }]
+            label: '# I кз',
+            data: data,
+            borderWidth: 0.5,
+            borderColor: '#FF4500',
+            backgroundColor: "#FF4500"
+                
+        },]
         },
         options: {  responsive: true,
         plugins: {
             title: {
             display: true,
-            text: 'Типовая кривая тока КЗ'
+            text: 'Ток КЗ'
             }
         },
         scales: {

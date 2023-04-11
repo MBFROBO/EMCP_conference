@@ -54,17 +54,22 @@
 						console.log(error);
 					}
 					removeData();
-					addData(JSON.parse(Data['DATA']));
-					I_KZ = JSON.parse(Data['I_kz']);
 
-					let _IKZ = document.createElement('div');
-					_IKZ.id = '_IKZ';
-					let text_IKZ = document.createElement('h3');
-					text_IKZ.id = 'text_kz';
-					text_IKZ.innerHTML = 'Ток короткого замыкания в выбранный момент времени: ' + I_KZ.toFixed(4), 'A';
-					_IKZ.append(text_IKZ);
-					document.body.append(_IKZ);
+					var _data_ = JSON.parse(Data['DATA']);
+					var I_KZ = JSON.parse(Data['I_kz']);
+					var _i_ = [];
+					var t = 0;
 
+					for (let i = 0; i <I_KZ.length; i++) {
+						let _IKZ = I_KZ[i]*1.41*Math.sin((314*t));
+						_i_.push(_IKZ);
+						t = t + 0.001;
+					}
+
+					addData(_data_);
+					console.log(_data_);
+					addData_1(_i_);
+					
 				}
 				
 			}
@@ -152,6 +157,12 @@
 		<canvas id="myChart"></canvas>
 		<script src="/ui/js/plot.js"></script>
 	</div>
+
+	<div class="Chart_1">
+		<canvas id="myChart_1"></canvas>
+		<script src="/ui/js/plot_Ikz.js"></script>
+	</div>
+	
 
 	{%endblock%}
 	

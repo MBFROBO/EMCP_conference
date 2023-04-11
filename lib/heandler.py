@@ -30,7 +30,7 @@ class Heandler:
             model = model.replace('-','_')
             
             self.Params = json.dumps(self.SQL.request(request_type= 'SELECT',
-                            Table_name= f"FROM MechParams INNER JOIN RESISTANCE,SinchroGenerators,TimeConstants",
+                            Table_name= f"FROM MechParams INNER JOIN RESISTANCE,SinchroGenerators,TimeConstants, ExcitationSystem",
                             Variable= '*',
                             Condition= "WHERE",
                             arg=('MechParams.Name','=',f"'{model}'")))
@@ -41,7 +41,7 @@ class Heandler:
             del self.Params[4-1]
             del self.Params[15-2]
             del self.Params[22-3]
-
+            del self.Params[23]
             # print(self.Params)
 
     def Variable_determinate(self):
@@ -73,7 +73,10 @@ class Heandler:
         self.T2d0:float              = float(self.Params[20]) # 0.168
         self.T1q0:float              = float(self.Params[21]) # 0.0
         self.T2q0:float              = float(self.Params[22]) # 0.5
-            
+        # Система возбуждения
+        self.ExcCurrent              = float(self.Params[23]) #2900 А
+        self.ExcVoltage              = float(self.Params[24]) #447  В
+        self.ExcPower                = float(self.Params[25]) #3100 кВт
 
 class Solver(Heandler):
 
@@ -91,12 +94,11 @@ class Solver(Heandler):
             self.kz_Time                = kzTime
             self.DEBUG                  = DEBUG
 
-
             Xout        = float(self.InductiveResistance)
             BasePower   = float(self.BasePower)
             BaseVoltage = float(self.BaseVoltage)
             kzTime      = int(str(self.kz_Time).split('0.')[1])
-            print(kzTime)
+
             S_BASE = BasePower * 10**6                      # Базисная мощность
             U_BASE = BaseVoltage * 10**3                    # Базисное напряжение
             I_BASE = S_BASE/(np.sqrt(3)*U_BASE)             # Базисный ток
@@ -131,11 +133,29 @@ class Solver(Heandler):
             # E11q0 = E11q/U_BASE
             # E1q0  = E1q/U_BASE
 
-            t = [float(i) for i in np.arange(0.00,0.51, 0.01)] # Интервал и шаг времени
+            t = [float(i) for i in np.arange(0.00,0.51, 0.001)] # Интервал и шаг времени
 
+            def time_const(T1d0 = self.T1d0, X1d = X1d, Xout = Xout, Xd = Xd, x_sigma = self.x_sigma, Tq0 = self.T2q0, x2q = self.x2q, xq = self.xq):
+
+                Xf = self.ExcVoltage/self.ExcCurrent * 1
+                # Актвивное сопротивление обмотки возбуждения пока возьмём как заглушку из расчёта генераторов:
+                Rf = 1.33 * 10**-3 * 1
+                T1f = Xf/(314*Rf)
+                T1d = T1d0*(X1d + Xout/(Xd + Xout))
+                T1_1d = T1f + T1d
+                Xad = Xd - x_sigma
+                Sigma1 = ((x_sigma + Xout)**2 * Xad**2) / ((Xf*(Xd + Xout) - Xad**2) * (X1d*(Xd + Xout) - Xad**2))
+                
+                T2_2d = Sigma1 * (T1f*T1d)/(T1f + T1d)
+
+                T2_2q = Tq0* (x2q + Xout)/ (xq + Xout)
+                return T1_1d, T2_2d, T2_2q
+            
+            T1_1d, T2_2d, T2_2q = time_const()
+            
             def Ldpt(t = t,Eq0 = Eq0, Xd =Xd, Xout = Xout, 
-                        E1q0 = E1q0, X1d = X1d, T1d0 = self.T1d0, 
-                        T11d0 = self.T2d0, E11q0=E11q0, X11d = X2d, Tsigma = T_sigma):
+                        E1q0 = E1q0, X1d = X1d, T1d0 = T1_1d, 
+                        T11d0 = T2_2d, E11q0=E11q0, X11d = X2d, Tsigma = T_sigma):
                 
                 Eqp = 3  # Предельное значение ЭДС
                 idpt = []
@@ -151,7 +171,7 @@ class Solver(Heandler):
 
             IDPT = Ldpt()
 
-            def Iqpt(t=t, E11d = E11d, X11q = self.x2q, Xout = Xout, T11q0 = self.T2q0):
+            def Iqpt(t=t, E11d = E11d, X11q = self.x2q, Xout = Xout, T11q0 = T2_2q):
                 iqpt = []
                 for t in t:
                     iqpt_1 = (E11d/(X11q + Xout)*np.exp(-t/T11q0))
@@ -199,15 +219,17 @@ class Solver(Heandler):
                     "E''q0":E11q0,    # ok
                     "Eq":Eq,        # ok
                     "Tsigma":T_sigma, # ok
-                    "_gamma":_gamma
-                    
+                    "_gamma":_gamma,
+                    "T'd":T1_1d,
+                    "T''d": T2_2d,
+                    "T''q": T2_2q
                 }
 
                 for i,j in zip(variable_dict.keys(),variable_dict.values()):
                     print(i,':',j)
                     print('----------------')
 
-            return [_gamma,'',I_kz]
+            return [_gamma,'',IPT]
         except ZeroDivisionError:
             return [0,'Ошибка деления на 0. Заполните все поля формы.']
         except IndexError:

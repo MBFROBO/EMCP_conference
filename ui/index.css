@@ -170,13 +170,13 @@ input[id = _forms] {
 
 }
 
-.Chart {
+.Chart, .Chart_1 {
     position:relative;
     left: 45%;
-    top: 20%;
+    top: 10%;
 
-    height: 50%;
-    width: 50%;
+    height: 40%;
+    width: 45%;
 
 }
 
